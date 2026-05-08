@@ -112,54 +112,46 @@ Bolt CEP Info Page Link: https://hyperbrew.co/resources/bolt-cep
 
 ## Quick Start
 
-<img src="src/js/assets/bolt-cep-cli.gif" alt="Bolt CEP">
+Create a new project from this fork using `degit` (no git history carried over):
 
-Create your new Bolt CEP project (follow CLI prompts)
+```
+pnpm dlx degit tv2-vonstring/bolt-cep#hosted my-project
+cd my-project
+pnpm i
+```
 
-- yarn - `yarn create bolt-cep`
-- npm - `npx create-bolt-cep`
-- pnpm - `pnpm create bolt-cep`
-
-Change directory to the new project
-
-- `cd project`
-
-Install Dependencies (if not already done by create command)
-
-- yarn - `yarn`
-- npm - `npm i`
-- pnpm - `pnpm i`
+> For the official Bolt CEP CLI (without hosted plugin support), see the [original repo](https://github.com/hyperbrew/bolt-cep).
 
 **⚠️ Enable PlayerDebugMode**
 
-- Adobe CEP's PlayerDebugMode must be enabled on your machine to test `yarn build` or `yarn dev` builds. Only an installed ZXP with `yarn zxp` will work without PlayerDebugMode enabled.
+- Adobe CEP's PlayerDebugMode must be enabled on your machine to test `pnpm build` or `pnpm dev` builds. Only an installed ZXP with `pnpm zxp` will work without PlayerDebugMode enabled.
   - Enable this easily with the [aescripts ZXP Installer](https://aescripts.com/learn/zxp-installer/) > Settings > Debug > Enable Debugging
   - Or enable manually per OS by following the CEP Cookbook Instructions: [Adobe CEP 12 Cookbook](https://github.com/Adobe-CEP/CEP-Resources/blob/master/CEP_12.x/Documentation/CEP%2012%20HTML%20Extension%20Cookbook.md#debugging-unsigned-extensions)
 
 Build the extension (must run before `dev`, can also run after for panel to work statically without the process) Symlink is created to extensions folder.
 
-- yarn `yarn build`
-- npm `npm run build`
-- pnpm `pnpm build`
+```
+pnpm build
+```
 
 Run the extension in HMR Hot-reload mode for rapid development. Both JS and ExtendScript folders re-build on changes.
 Viewable in browser via localhost:3000/panel/ (see [Panel Structure](#cep-panel-structure) to set up multiple panels)
 
-- yarn `yarn dev`
-- npm `npm run dev`
-- pnpm `pnpm dev`
+```
+pnpm dev
+```
 
 Build & Package the extension as a ZXP for delivery to the `dist/zxp` folder (install with [aescripts ZXP Installer](https://aescripts.com/learn/zxp-installer/) or another ZXP installer)
 
-- yarn `yarn zxp`
-- npm `npm run zxp`
-- pnpm `pnpm zxp`
+```
+pnpm zxp
+```
 
 Bundles your packaged zxp file and specified assets from `copyZipAssets` to a zip archive in the `./zip` folder
 
-- yarn `yarn zip`
-- npm `npm run zip`
-- pnpm `pnpm zip`
+```
+pnpm zip
+```
 
 ---
 
