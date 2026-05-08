@@ -28,6 +28,14 @@ export const extendscriptConfig = (
         : cepConfig.build?.sourceMap,
     },
     plugins: [
+      {
+        name: "replace-cep-id",
+        transform(code: string) {
+          if (code.includes("__CEP_ID__")) {
+            return code.replace(/__CEP_ID__/g, JSON.stringify(cepConfig.id));
+          }
+        },
+      },
       json(),
       nodeResolve({
         extensions,
@@ -83,8 +91,8 @@ export const extendscriptConfig = (
   };
 
   if (isProduction) {
-    build();
+    return build();
   } else {
-    watchRollup();
+    return watchRollup();
   }
 };

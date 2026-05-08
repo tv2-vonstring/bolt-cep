@@ -1,6 +1,8 @@
 import type { CEP_Config } from "vite-cep-plugin";
 import { version } from "./package.json";
 
+const isHosted = process.env.APP_ENV?.startsWith("hosted") ?? false;
+
 const config: CEP_Config = {
   version,
   id: "com.bolt.cep", // BOLT_ID_REPLACE
@@ -34,7 +36,7 @@ const config: CEP_Config = {
 
   panels: [
     {
-      mainPath: "./main/index.html",
+      mainPath: isHosted ? "./main-stub/index.html" : "./main/index.html",
       name: "main",
       panelDisplayName: "Bolt CEP", // BOLT_DISPLAYNAME_REPLACE
       autoVisible: true,

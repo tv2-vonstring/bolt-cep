@@ -11,4 +11,7 @@ declare global {
     cep: cep;
     __adobe_cep__: __adobe_cep__;
   }
+  const __CEP_ID__: string;
+  const HOSTED_URL: string;
+  const IS_HOSTED: boolean;
 }

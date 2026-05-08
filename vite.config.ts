@@ -8,7 +8,19 @@ import {sveltePreprocess} from "svelte-preprocess"; // BOLT_SVELTE_ONLY
 import { cep, CepOptions, runAction } from "vite-cep-plugin";
 import cepConfig from "./cep.config";
 import path from "path";
+import fs from "fs";
 import { extendscriptConfig } from "./vite.es.config";
+import dotenv from "dotenv";
+
+if (process.env.APP_ENV === "development") {
+  dotenv.config({ path: ".env.development" });
+} else if (process.env.APP_ENV === "hosted-stage") {
+  dotenv.config({ path: ".env.hosted.stage" });
+} else if (process.env.APP_ENV === "hosted") {
+  dotenv.config({ path: ".env.hosted" });
+} else {
+  dotenv.config({ path: ".env.production" });
+}
 
 const extensions = [".js", ".ts", ".tsx"];
 
@@ -21,6 +33,7 @@ const outDir = path.resolve(__dirname, "dist", cepDist);
 
 const debugReact = process.env.DEBUG_REACT === "true";
 const isProduction = process.env.NODE_ENV === "production";
+const isHosted = process.env.APP_ENV?.startsWith("hosted") ?? false;
 const isMetaPackage = process.env.ZIP_PACKAGE === "true";
 const isPackage = process.env.ZXP_PACKAGE === "true" || isMetaPackage;
 const isServe = process.env.SERVE_PANEL === "true";
@@ -56,6 +69,11 @@ export default defineConfig({
     // svelte(), // BOLT_SVELTE_ONLY
     cep(config),
   ],
+  define: {
+    __CEP_ID__: JSON.stringify(cepConfig.id),
+    HOSTED_URL: JSON.stringify(process.env.HOSTED_URL || ""),
+    IS_HOSTED: JSON.stringify(isHosted),
+  },
   resolve: {
     alias: [{ find: "@esTypes", replacement: path.resolve(__dirname, "src") }],
   },
@@ -92,13 +110,21 @@ export default defineConfig({
   },
 });
 
-// rollup es3 build
-const outPathExtendscript = path.join("dist", cepDist, "jsx", "index.js");
-extendscriptConfig(
-  `src/jsx/index.ts`,
-  outPathExtendscript,
-  cepConfig,
-  extensions,
-  isProduction,
-  isPackage,
-);
+// rollup es3 build (skip for hosted; jsx is served from the web server)
+if (!isHosted) {
+  const outPathExtendscript = path.join("dist", cepDist, "jsx", "index.js");
+  extendscriptConfig(
+    `src/jsx/index.ts`,
+    outPathExtendscript,
+    cepConfig,
+    extensions,
+    isProduction,
+    isPackage,
+  );
+} else if (isPackage) {
+  // ZXP packager waits for dist/cep/jsx/ to exist before signing.
+  // Create a placeholder so it doesn't hang when ExtendScript is skipped.
+  const jsxDir = path.join("dist", cepDist, "jsx");
+  fs.mkdirSync(jsxDir, { recursive: true });
+  fs.writeFileSync(path.join(jsxDir, "index.js"), "// hosted stub - ExtendScript served from web server\n");
+}

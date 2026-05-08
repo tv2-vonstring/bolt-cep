@@ -1,8 +1,9 @@
 <img src="src/js/assets/bolt-cep.svg" alt="Bolt CEP" title="Bolt CEP" width="400" />
 
+> **This is an unofficial fork of [bolt-cep](https://github.com/hyperbrew/bolt-cep)** that adds support for hosted plugin builds. For the official project, see the original repo.
+
 A lightning-fast boilerplate for building Adobe CEP Extensions in Svelte, React, or Vue built on Vite + TypeScript + Sass
 
-![npm](https://img.shields.io/npm/v/bolt-cep)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/hyperbrew/bolt-cep/blob/master/LICENSE)
 [![Chat](https://img.shields.io/badge/chat-discord-7289da.svg)](https://discord.gg/PC3EvvuRbc)
 
@@ -159,6 +160,80 @@ Bundles your packaged zxp file and specified assets from `copyZipAssets` to a zi
 - yarn `yarn zip`
 - npm `npm run zip`
 - pnpm `pnpm zip`
+
+---
+
+## Hosted Plugins
+
+This fork adds a **hosted plugin** pattern where the CEP panel's UI is served from a web server instead of being bundled into the extension. The installed ZXP contains only a lightweight stub panel that redirects to your hosted URL — this lets you update the UI without re-distributing the ZXP.
+
+### How it works
+
+| Mode | What's installed | Where UI lives |
+|------|-----------------|----------------|
+| Normal | Full UI bundled in ZXP | Loaded locally from `dist/cep/` |
+| Hosted | Stub panel in ZXP | Loaded from `HOSTED_URL` |
+
+When `APP_ENV` starts with `hosted`, `cep.config.ts` switches the panel's `mainPath` to `./main-stub/index.html`, which immediately redirects the CEP webview to `HOSTED_URL`. ExtendScript is skipped in the web build and a placeholder is written so the ZXP packager doesn't hang.
+
+### Setup
+
+**1. Set your hosted URL** in `.env.hosted`:
+
+```
+NODE_ENV=production
+HOSTED_URL=https://your-app.example.com/
+```
+
+**2. Check `cep.config.ts`** — the conditional `mainPath` is already wired up:
+
+```ts
+mainPath: isHosted ? "./main-stub/index.html" : "./main/index.html",
+```
+
+**3. Build the web app** — your normal panel UI built as ES modules for browser hosting:
+
+```
+pnpm build:hosted:web
+```
+
+This uses `vite.hosted.config.ts` and outputs to `dist/hosted/`. Deploy the contents of that folder to your web server at the URL set in `HOSTED_URL`.
+
+**4. Build & sign the stub ZXP** for distribution:
+
+```
+pnpm zxp:hosted
+```
+
+This builds the CEP extension with `APP_ENV=hosted`, so the stub panel points at your `HOSTED_URL`.
+
+### All hosted commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm build:hosted:web` | Build web UI to `dist/hosted/` |
+| `pnpm zxp:hosted` | Build + sign stub ZXP (production) |
+| `pnpm zxp:hosted:stage` | Build + sign stub ZXP (staging, uses `.env.hosted.stage`) |
+| `pnpm build:hosted` | Full pipeline: web build + ZXP |
+
+### Environment files
+
+| File | Used when |
+|------|-----------|
+| `.env.development` | `pnpm dev` / `pnpm zxp:dev` |
+| `.env.production` | `pnpm build` / `pnpm zxp` |
+| `.env.hosted` | `pnpm zxp:hosted` / `pnpm build:hosted:web` |
+| `.env.hosted.stage` | `pnpm zxp:hosted:stage` |
+
+### Global defines
+
+These are injected at build time and available in both the CEP and hosted web builds:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `IS_HOSTED` | `boolean` | `true` when built with `APP_ENV=hosted*` |
+| `HOSTED_URL` | `string` | The URL the stub panel redirects to |
+| `__CEP_ID__` | `string` | The extension ID from `cep.config.ts` (also available in ExtendScript via the `replace-cep-id` rollup plugin) |
 
 ---
 
